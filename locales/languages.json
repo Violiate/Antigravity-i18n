@@ -1,0 +1,16 @@
+[
+  { "code": "en", "name": "English", "nativeName": "English", "label": "English (Original)" },
+  { "code": "zh-CN", "name": "Simplified Chinese", "nativeName": "简体中文", "label": "简体中文 (zh-CN)" },
+  { "code": "zh-TW", "name": "Traditional Chinese", "nativeName": "繁體中文", "label": "繁體中文 (zh-TW)" },
+  { "code": "ja", "name": "Japanese", "nativeName": "日本語", "label": "日本語 (ja)" },
+  { "code": "ko", "name": "Korean", "nativeName": "한국어", "label": "한국어 (ko)" },
+  { "code": "es", "name": "Spanish", "nativeName": "Español", "label": "Español (es)" },
+  { "code": "fr", "name": "French", "nativeName": "Français", "label": "Français (fr)" },
+  { "code": "de", "name": "German", "nativeName": "Deutsch", "label": "Deutsch (de)" },
+  { "code": "pt-BR", "name": "Brazilian Portuguese", "nativeName": "Português (Brasil)", "label": "Português - Brasil (pt-BR)" },
+  { "code": "ru", "name": "Russian", "nativeName": "Русский", "label": "Русский (ru)" },
+  { "code": "it", "name": "Italian", "nativeName": "Italiano", "label": "Italiano (it)" },
+  { "code": "vi", "name": "Vietnamese", "nativeName": "Tiếng Việt", "label": "Tiếng Việt (vi)" },
+  { "code": "tr", "name": "Turkish", "nativeName": "Türkçe", "label": "Türkçe (tr)" },
+  { "code": "ar", "name": "Arabic", "nativeName": "العربية", "label": "العربية (ar)" }
+]

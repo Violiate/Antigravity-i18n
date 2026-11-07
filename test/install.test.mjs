@@ -1,0 +1,66 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { spawnSync } from 'node:child_process';
+import * as asar from '@electron/asar';
+import { ROOT_DIR, isAntigravityRunning } from '../lib/env.mjs';
+
+test('安装、重复安装、还原、更新和备份损坏保护（独立模拟客户端）', async t => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'agy 测试 & spaces-'));
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  const resources = path.join(dir, 'App/resources');
+  if (isAntigravityRunning(resources)) return t.skip('真实客户端在运行，安装器会主动阻止写入；退出后重跑');
+  const input = path.join(dir, 'source');
+  fs.mkdirSync(path.join(input, 'dist'), { recursive: true });
+  fs.mkdirSync(resources, { recursive: true });
+  fs.writeFileSync(path.join(input, 'dist/main.js'), '"use strict"; console.log("fixture");');
+  fs.writeFileSync(path.join(input, 'unchanged.txt'), 'unchanged data');
+  const archive = path.join(resources, 'app.asar');
+  await asar.createPackage(input, archive);
+  const original = fs.readFileSync(archive);
+  const run = (...args) => spawnSync(process.execPath, [path.join(ROOT_DIR, 'install.mjs'), ...args, '--dir', path.dirname(resources)], { cwd: os.tmpdir(), encoding: 'utf8' });
+  let r = run('install', 'not-a-language');
+  assert.notEqual(r.status, 0);
+  assert.ok(!fs.existsSync(path.join(resources, 'agy-i18n')));
+  r = run('install', 'ja'); assert.equal(r.status, 0, r.stderr);
+  const patched = fs.readFileSync(archive);
+  assert.ok(!patched.equals(original));
+  asar.uncache(archive);
+  assert.equal(asar.extractFile(archive, 'unchanged.txt').toString(), 'unchanged data');
+  const config = path.join(resources, 'agy-i18n/config.json');
+  fs.writeFileSync(config, JSON.stringify({ locale: 'ja', proxy: 'http://127.0.0.1:12450' }));
+  r = run('install', 'fr'); assert.equal(r.status, 0, r.stderr);
+  assert.deepEqual(fs.readFileSync(archive), patched);
+  assert.equal(JSON.parse(fs.readFileSync(config)).proxy, 'http://127.0.0.1:12450');
+  r = run('status'); assert.equal(JSON.parse(r.stdout).installed, true);
+  r = run('restore'); assert.equal(r.status, 0, r.stderr);
+  assert.deepEqual(fs.readFileSync(archive), original);
+  r = run('status'); assert.equal(JSON.parse(r.stdout).installed, false);
+  r = run('install'); assert.equal(r.status, 0, r.stderr);
+  // Simulate official update; old restore must not overwrite it.
+  fs.writeFileSync(path.join(input, 'dist/main.js'), 'console.log("updated client");');
+  await asar.createPackage(input, archive);
+  const updated = fs.readFileSync(archive);
+  r = run('restore'); assert.notEqual(r.status, 0);
+  assert.deepEqual(fs.readFileSync(archive), updated);
+  r = run('install'); assert.equal(r.status, 0, r.stderr);
+  const state = JSON.parse(fs.readFileSync(path.join(resources, 'agy-i18n/install-state.json')));
+  const before = fs.readFileSync(archive);
+  fs.writeFileSync(state.backup, 'corrupt');
+  r = run('restore'); assert.notEqual(r.status, 0);
+  assert.deepEqual(fs.readFileSync(archive), before);
+});
+
+test('不兼容归档不写入运行时文件', async t => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'agy-incompatible-'));
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  if (isAntigravityRunning(dir)) return t.skip('需退出真实客户端后运行');
+  const input = path.join(dir, 'src');fs.mkdirSync(input);
+  fs.writeFileSync(path.join(input, 'other.js'), 'void 0;');
+  await asar.createPackage(input, path.join(dir, 'app.asar'));
+  const r = spawnSync(process.execPath, [path.join(ROOT_DIR, 'install.mjs'), 'install', '--dir', dir], { encoding: 'utf8' });
+  assert.notEqual(r.status, 0);
+  assert.ok(!fs.existsSync(path.join(dir, 'agy-i18n')));
+});

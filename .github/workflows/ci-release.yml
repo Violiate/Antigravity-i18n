@@ -1,0 +1,79 @@
+name: CI & Release Package
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    name: Test, Build & Verify Windows x64 Bundle
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          cache: 'npm'
+
+      - name: Cache bundled Node.js runtime archive
+        uses: actions/cache@v4
+        with:
+          path: out/build-cache/node-v22.23.4-win-x64.zip
+          key: bundled-node-win-x64-v22.23.4-cbc74b5e
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run unit & multilingual dictionary AST tests
+        run: npm test
+
+      - name: Build standalone Windows x64 offline package
+        run: npm run build:windows
+
+      - name: Run offline package regression & GUI smoke test
+        run: npm run test:package
+
+      - name: Verify release artifacts & checksums
+        shell: pwsh
+        run: |
+          Get-ChildItem -Path dist -File | ForEach-Object {
+            Write-Host ("Artifact: {0} ({1:N2} MB)" -f $_.Name, ($_.Length / 1MB))
+          }
+          Get-Content dist/*.sha256
+
+      - name: Upload Windows x64 package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: agy-i18n-windows-x64
+          path: |
+            dist/*.zip
+            dist/*.sha256
+            out/package-test/report.json
+          if-no-files-found: error
+
+      - name: Publish GitHub Release on Tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/*.zip
+            dist/*.sha256
+          generate_release_notes: true
+          draft: false
+          prerelease: false

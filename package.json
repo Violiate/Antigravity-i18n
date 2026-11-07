@@ -1,0 +1,50 @@
+{
+  "name": "agy-i18n",
+  "version": "1.1.0",
+  "description": "🌐 1-click multilingual localization & live in-app language switcher for Google Antigravity Desktop — 14 languages, 2,175 UI strings, AST-safe patching & zero-dependency Windows GUI installer.",
+  "main": "install.mjs",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Violiate/Antigravity-i18n.git"
+  },
+  "homepage": "https://github.com/Violiate/Antigravity-i18n#readme",
+  "bugs": {
+    "url": "https://github.com/Violiate/Antigravity-i18n/issues"
+  },
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "setup": "node install.mjs install",
+    "restore": "node install.mjs restore",
+    "status": "node install.mjs status",
+    "language": "node language.mjs",
+    "preview": "node patch-preview.mjs",
+    "preview:all": "node patch-preview.mjs all",
+    "extract": "node extract.mjs",
+    "analyze": "node analyze-capture.mjs",
+    "build:windows": "node packaging/build.mjs",
+    "test:package": "node packaging/test-package.mjs"
+  },
+  "keywords": [
+    "antigravity",
+    "agy",
+    "i18n",
+    "l10n",
+    "localization",
+    "translation",
+    "multilingual",
+    "electron"
+  ],
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@electron/asar": "^4.3.1",
+    "acorn": "^8.19.0",
+    "acorn-walk": "^8.3.5",
+    "magic-string": "^1.4.5"
+  }
+}

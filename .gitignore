@@ -1,0 +1,12 @@
+node_modules/
+out/
+dist/
+probe/
+*.asar
+*.i18n-tmp
+*.exe
+*.log
+.DS_Store
+Thumbs.db
+.env
+
